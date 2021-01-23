@@ -8,6 +8,7 @@ import (
 	cache "github.com/victorspringer/http-cache"
 	"github.com/victorspringer/http-cache/adapter/memory"
 	"image"
+	"image/draw"
 	"image/png"
 	"net/http"
 	"strconv"
@@ -37,6 +38,16 @@ func avatarHandler(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+	}
+
+	// Convenient for some circle avatar pickers, expands canvas width to height
+	if square := r.URL.Query().Get("square"); square == "true" {
+		height := resultImage.Bounds().Dy()
+		squared := image.NewRGBA(image.Rect(0, 0, height, height))
+		sx := (height - resultImage.Bounds().Dx()) / 2
+		bounds := image.Rect(sx, 0, sx+resultImage.Bounds().Dx(), height)
+		draw.Draw(squared, bounds, resultImage, image.Point{}, draw.Over)
+		resultImage = squared
 	}
 
 	buffer := new(bytes.Buffer)
